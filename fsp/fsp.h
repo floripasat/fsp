@@ -39,15 +39,23 @@
 #define FSP_H_
 
 #include <stdint.h>
-#include <stdbool.h>
 
+// Packet positions
+#define FSP_PKT_POS_SOD                 0
+#define FSP_PKT_POS_SRC_ADR             1
+#define FSP_PKT_POS_DST_ADR             2
+#define FSP_PKT_POS_LEN                 3
+#define FSP_PKT_POS_TYPE                4
+
+// Start Of Data byte
 #define FSP_PKT_SOD                     0x7E
 
-#define FSP_ADR_UNKNOWN                 0
+// Addresses
 #define FSP_ADR_EPS                     1
 #define FSP_ADR_TTC                     2
 #define FSP_ADR_OBDH                    3
 
+// Types of packets
 #define FSP_PKT_TYPE_DATA               1
 #define FSP_PKT_TYPE_DATA_WITH_ACK      2
 #define FSP_PKT_TYPE_CMD                3
@@ -55,31 +63,49 @@
 #define FSP_PKT_TYPE_ACK                5
 #define FSP_PKT_TYPE_NACK               6
 
+// Commands
 #define FSP_CMD_NOP                     1
 #define FSP_CMD_SEND_DATA               2
 #define FSP_CMD_REQUEST_RF_MUTEX        3
 #define FSP_CMD_SHUTDOWN                4
 
+// Ack answers
 #define FSP_ACK_RF_MUTEX_FREE           1
 #define FSP_ACK_RF_MUTEX_BUSY           2
 
+// Max. lengths
+#define FSP_PKT_MAX_LENGTH              256
 #define FSP_PAYLOAD_MAX_LENGTH          252
+
+// CRC16 initial value (or seed byte)
+#define FSP_CRC16_INITIAL_VALUE         0
+
+// Decode states
+#define FSP_PKT_NOT_READY               0
+#define FSP_PKT_READY                   1
+#define FSP_PKT_INVALID                 2
+#define FSP_PKT_WRONG_ADR               3
+#define FSP_PKT_ERROR                   4
+
+// Config.
+#define FSP_PKT_WITH_ACK                1
+#define FSP_PKT_WITHOUT_ACK             0
 
 /**
  * \struct FSPPacket
  * 
  * \brief FSP packet struct.
  */
-typedef struct FSPPacket
+typedef struct
 {
     uint8_t sod;                                /** Start of data. */
     uint8_t src_adr;                            /** Source address. */
     uint8_t dst_adr;                            /** Destination address. */
     uint8_t length;                             /** Length of the packet payload. */
     uint8_t type;                               /** Type of packet. */
-    uint8_t[FSP_PAYLOAD_MAX_LENGTH] payload;    /** Payload of the packet. */
+    uint8_t payload[FSP_PAYLOAD_MAX_LENGTH];    /** Payload of the packet. */
     uint16_t crc16;                             /** CRC16-CCITT bytes. */
-};
+} FSPPacket;
 
 /**
  * \var fsp_my_adr
@@ -87,6 +113,13 @@ typedef struct FSPPacket
  * \brief The address of the module running this library.
  */
 extern uint8_t fsp_my_adr;
+
+/**
+ * \var fsp_decode_pos
+ * 
+ * \brief Decode byte position (From the internal "state machine"),
+ */
+extern uint8_t fsp_decode_pos;
 
 /**
  * \fn fsp_init
@@ -104,43 +137,43 @@ void fsp_init(uint8_t module_adr);
  * 
  * \brief Generates a FSP data packet.
  * 
- * \param data 
- * \param data_len
- * \param dst_adr
- * \param ack
- * \param fsp
+ * \param data is the paylod of the desired data packet.
+ * \param data_len is the length of the payload of the desired data packet.
+ * \param dst_adr is the destination address.
+ * \param ack is the acknowledge option (FSP_PKT_WITH_ACK or FSP_PKT_WITHOUT_ACK).
+ * \param fsp is a pointer to a FSPPacket struct to store the new data packet.
  * 
  * \return None
  */
-void fsp_gen_data_pkt(uint8_t *data, uint8_t data_len, uint8_t dst_adr, bool ack, FSPPacket *fsp);
+void fsp_gen_data_pkt(uint8_t *data, uint8_t data_len, uint8_t dst_adr, uint8_t ack, FSPPacket *fsp);
 
 /**
  * \fn fsp_gen_cmd_pkt
  * 
  * \brief Generates a FSP command packet.
  * 
- * \param cmd
- * \param dst_adr
- * \param ack
- * \param fsp
+ * \param cmd is the command of the desired command packet.
+ * \param dst_adr is the destination address.
+ * \param ack is the acknowledge option (FSP_PKT_WITH_ACK or FSP_PKT_WITHOUT_ACK).
+ * \param fsp is a pointer to a FSPPacket struct to store the new data packet.
  * 
  * \return None
  */
-void fsp_gen_cmd_pkt(uint8_t cmd, uint8_t dst_adr, bool ack, FSPPacket *fsp);
+void fsp_gen_cmd_pkt(uint8_t cmd, uint8_t dst_adr, uint8_t ack, FSPPacket *fsp);
 
 /**
  * \fn fsp_gen_cmd_pkt
  * 
- * \brief Generates a FSP packet from a given data.
+ * \brief Generates a generic FSP packet from a given data.
  * 
- * \param payload 
- * \param payload_len
- * \param dst_adr
- * \param type
+ * \param payload is the payload of the desired packet.
+ * \param payload_len is the length of the payload of the desired packet.
+ * \param dst_adr is the destination address.
+ * \param type is the type of the packet.
  * 
  * \return None
  */
-void fsp_gen_pkt(uint8_t *payload, uint8_t *payload_len, uint8_t dst_adr, uint8_t type, FSPPacket *fsp);
+void fsp_gen_pkt(uint8_t *payload, uint8_t payload_len, uint8_t dst_adr, uint8_t type, FSPPacket *fsp);
 
 /**
  * \fn fsp_encode
@@ -160,13 +193,18 @@ void fsp_encode(FSPPacket *fsp, uint8_t *pkt, uint8_t *pkt_len);
  * 
  * \brief Decodes a array with the FSP packet into a FSPPacket struct.
  * 
- * \param pkt is an array with a FSP packet.
- * \param pkt_len is the length of the pkt array.
+ * \param byte is the incoming byte from a FSP packet.
  * \param fsp is a pointer to a FSPPacket struct to store the packet data.
  * 
- * \return None
+ * \return The state of the decoding process. It can be:
+ *              -\b FSP_PKT_NOT_READY when all the packet data were not received yet.
+ *              -\b FSP_PKT_READY when the packet is ready to be used and the decoding process is over.
+ *              -\b FSP_PKT_INVALID when an invalid packet was received.
+ *              -\b FSP_PKT_WRONG_ADR when the destination address of the packet is not equal to host address.
+ *              -\b FSP_PKT_ERROR when an error occurs during the decoding process.
+ *              .
  */
-void fsp_decode(uint8_t *pkt, uint8_t pkt_len, FSPPacket *fsp);
+uint8_t fsp_decode(uint8_t byte, FSPPacket *fsp);
 
 #endif // FSP_H_
 
