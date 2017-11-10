@@ -162,6 +162,34 @@ void fsp_gen_data_pkt(uint8_t *data, uint8_t data_len, uint8_t dst_adr, uint8_t 
 void fsp_gen_cmd_pkt(uint8_t cmd, uint8_t dst_adr, uint8_t ack, FSPPacket *fsp);
 
 /**
+ * \fn fsp_gen_ack_pkt
+ * 
+ * \brief Generates a FSP ack. packet.
+ * 
+ * The ack. packet does not have a payload (The length field is zero).
+ * 
+ * \param dst_adr is the destination address.
+ * \param fsp is a pointer to a FSPPacket struct to store the new data packet.
+ * 
+ * \return None
+ */
+void fsp_gen_ack_pkt(uint8_t dst_adr, FSPPacket *fsp);
+
+/**
+ * \fn fsp_gen_nack_pkt
+ * 
+ * \brief Generates a FSP nack. packet.
+ * 
+ * The nack. packet does not have a payload (The length field is zero).
+ * 
+ * \param dst_adr is the destination address.
+ * \param fsp is a pointer to a FSPPacket struct to store the new data packet.
+ * 
+ * \return None
+ */
+void fsp_gen_nack_pkt(uint8_t dst_adr, FSPPacket *fsp);
+
+/**
  * \fn fsp_gen_cmd_pkt
  * 
  * \brief Generates a generic FSP packet from a given data.

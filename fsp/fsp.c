@@ -73,6 +73,16 @@ void fsp_gen_cmd_pkt(uint8_t cmd, uint8_t dst_adr, uint8_t ack, FSPPacket *fsp)
     }
 }
 
+void fsp_gen_ack_pkt(uint8_t dst_adr, FSPPacket *fsp)
+{
+    fsp_gen_pkt((void*)0, 0, dst_adr, FSP_PKT_TYPE_ACK, fsp);
+}
+
+void fsp_gen_nack_pkt(uint8_t dst_adr, FSPPacket *fsp)
+{
+    fsp_gen_pkt((void*)0, 0, dst_adr, FSP_PKT_TYPE_NACK, fsp);
+}
+
 void fsp_gen_pkt(uint8_t *payload, uint8_t payload_len, uint8_t dst_adr, uint8_t type, FSPPacket *fsp)
 {
     fsp->sod        = FSP_PKT_SOD;
