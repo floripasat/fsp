@@ -87,7 +87,7 @@ void fsp_gen_pkt(uint8_t *payload, uint8_t payload_len, uint8_t dst_adr, uint8_t
         fsp->payload[i] = payload[i];
     }
     
-    fsp->crc16      = crc16_CCITT(FSP_CRC16_INITIAL_VALUE, fsp->payload, fsp->length);
+    fsp->crc16      = crc16_CCITT(FSP_CRC16_INITIAL_VALUE, &fsp->src_adr, fsp->length + 4);
 }
 
 void fsp_encode(FSPPacket *fsp, uint8_t *pkt, uint8_t *pkt_len)
@@ -187,7 +187,7 @@ uint8_t fsp_decode(uint8_t byte, FSPPacket *fsp)
                 
                 fsp_decode_pos = FSP_PKT_POS_SOD;
                 
-                if (fsp->crc16 == crc16_CCITT(FSP_CRC16_INITIAL_VALUE, fsp->payload, fsp->length))
+                if (fsp->crc16 == crc16_CCITT(FSP_CRC16_INITIAL_VALUE, &fsp->src_adr, fsp->length + 4))
                 {
                     return FSP_PKT_READY;
                 }
