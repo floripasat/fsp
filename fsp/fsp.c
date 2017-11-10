@@ -49,6 +49,11 @@ void fsp_init(uint8_t module_adr)
     fsp_decode_pos = 0;
 }
 
+void fsp_reset()
+{
+    fsp_decode_pos = 0;
+}
+
 void fsp_gen_data_pkt(uint8_t *data, uint8_t data_len, uint8_t dst_adr, uint8_t ack, FSPPacket *fsp)
 {
     if (ack == FSP_PKT_WITH_ACK)

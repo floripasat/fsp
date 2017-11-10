@@ -133,6 +133,15 @@ extern uint8_t fsp_decode_pos;
 void fsp_init(uint8_t module_adr);
 
 /**
+ * \fn fsp_reset
+ * 
+ * \brief Resets the FSP internal state machine (The position counter) for decoding.
+ * 
+ * \return None
+ */
+void fsp_reset();
+
+/**
  * \fn fsp_gen_data_pkt
  * 
  * \brief Generates a FSP data packet.
