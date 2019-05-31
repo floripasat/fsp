@@ -66,6 +66,7 @@
 #define FSP_CMD_SEND_DATA               2       /**< Send data command. */
 #define FSP_CMD_REQUEST_RF_MUTEX        3       /**< Request RF mutex command. */
 #define FSP_CMD_HIBERNATION             4       /**< Hibernation command. */
+#define FSP_CMD_RESET_CHARGE            5       /**< Reset battery charge command. */
 
 // Ack answers
 #define FSP_ACK_RF_MUTEX_FREE           1       /**< RF mutex is free. */
