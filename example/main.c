@@ -7,7 +7,7 @@ int main(int argc, char **argv)
     
     fsp_init(FSP_ADR_OBDH);                                                                 // OBDH module as host
     
-    FSPPacket fsp;
+    fsp_packet_t fsp;
     
     uint8_t obdh_data[] = "Test";                                                           // Data packet with "Test" as payload
     uint8_t obdh_data_len = sizeof(obdh_data)-1;
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     
     fsp_init(FSP_ADR_TTC);                                                                  // TTC module as host
     
-    FSPPacket fsp_d;
+    fsp_packet_t fsp_d;
     
     i = 0;
     while(i < 255)                                                                          // "Timeout"
